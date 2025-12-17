@@ -38,27 +38,57 @@
     return `${y}${m}${d}`;
   }
 
-  // Hoje + 2 dias
+  // Hoje + 5 dias
   const data = getDataSaoPauloMais(5);
 
   // Data para exibição (dd/mm/aaaa)
-const dataTexto =
-  `${data.slice(6,8)}/${data.slice(4,6)}/${data.slice(0,4)}`;
+  const dataTexto =
+    `${data.slice(6,8)}/${data.slice(4,6)}/${data.slice(0,4)}`;
 
   // 08:00–09:00 BRT = 11:00–12:00 UTC
   const inicioUTC = `${data}T110000Z`;
   const fimUTC = `${data}T120000Z`;
 
-  // ÚNICO link que pode abrir o app fora do RBM
-  const calendarURL =
-    `https://www.google.com/calendar/render` +
-    `?action=TEMPLATE` +
-    `&text=Bradesco | Lembrete de Parcela` +
-    `&details=Seu acordo com o Bradesco vence em + ${dataTexto} +. Evite a quebra realizando o pagamento no prazo.` +
-    `&dates=${inicioUTC}/${fimUTC}` + 
-    `&trp=true`;
+  const titulo = 'Bradesco | Lembrete de Parcela';
+  const detalhes =
+    `Seu acordo com o Bradesco vence em ${dataTexto}. Evite a quebra realizando o pagamento no prazo.`;
 
-   // Tentativa direta (sem fallback)
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+
+  let calendarURL = '';
+
+  // ANDROID → Google Agenda (app)
+  if (/android/i.test(ua)) {
+    calendarURL =
+      `intent://calendar.google.com/calendar/render` +
+      `?action=TEMPLATE` +
+      `&text=${encodeURIComponent(titulo)}` +
+      `&details=${encodeURIComponent(detalhes)}` +
+      `&dates=${inicioUTC}/${fimUTC}` +
+      `#Intent;scheme=https;package=com.google.android.calendar;end`;
+
+  // iOS → Calendário nativo
+  } else if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+    calendarURL =
+      `webcal://p02-calendars.icloud.com/published/2/` +
+      `?action=TEMPLATE` +
+      `&title=${encodeURIComponent(titulo)}` +
+      `&notes=${encodeURIComponent(detalhes)}` +
+      `&startDate=${inicioUTC}` +
+      `&endDate=${fimUTC}`;
+
+  // Desktop / outros → Google Calendar Web
+  } else {
+    calendarURL =
+      `https://www.google.com/calendar/render` +
+      `?action=TEMPLATE` +
+      `&text=${encodeURIComponent(titulo)}` +
+      `&details=${encodeURIComponent(detalhes)}` +
+      `&dates=${inicioUTC}/${fimUTC}` +
+      `&trp=true`;
+  }
+
+  // Abertura direta do app / calendário
   window.location.replace(calendarURL);
 </script>
 
