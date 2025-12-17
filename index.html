@@ -41,6 +41,10 @@
   // Hoje + 2 dias
   const data = getDataSaoPauloMais(5);
 
+  // Data para exibição (dd/mm/aaaa)
+const dataTexto =
+  `${data.slice(6,8)}/${data.slice(4,6)}/${data.slice(0,4)}`;
+
   // 08:00–09:00 BRT = 11:00–12:00 UTC
   const inicioUTC = `${data}T110000Z`;
   const fimUTC = `${data}T120000Z`;
@@ -50,7 +54,7 @@
     `https://www.google.com/calendar/render` +
     `?action=TEMPLATE` +
     `&text=Bradesco | Lembrete de Parcela` +
-    `&details=Evite a quebra do seu acordo realizando o pagamento no prazo.` +
+    `&details=Seu acordo vence em + ${dataTexto} + .Evite a quebra do seu acordo realizando o pagamento no prazo.` +
     `&dates=${inicioUTC}/${fimUTC}` + 
     `&trp=true`;
 
