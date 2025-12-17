@@ -1,56 +1,79 @@
-<script>
-  // Pega a data de "hoje" em America/Sao_Paulo e soma N dias
-  function getDataSaoPauloMais(dias) {
-    const agora = new Date();
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Abrir Calendário</title>
 
-    // "2025-11-13, 18:23:45" no fuso America/Sao_Paulo
-    const spString = agora.toLocaleString('en-CA', {
-      timeZone: 'America/Sao_Paulo',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
+  <!-- Evita cache -->
+  <meta http-equiv="cache-control" content="no-cache">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="expires" content="0">
 
-    const [dataParte] = spString.split(','); // "YYYY-MM-DD"
-    const [ano, mes, dia] = dataParte.split('-').map(Number);
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
 
-    // Cria uma data só com ano/mes/dia e soma os dias
-    const spDate = new Date(ano, mes - 1, dia + dias);
+<body style="font-family: Arial, sans-serif; text-align:center; padding:40px;">
 
-    const y = spDate.getFullYear();
-    const m = String(spDate.getMonth() + 1).padStart(2, '0');
-    const d = String(spDate.getDate()).padStart(2, '0');
+  <h2>📅 Abrindo o calendário…</h2>
+  <p>Se não abrir automaticamente, toque no botão abaixo:</p>
 
-    return {
-      y,
-      m,
-      d,
-      ymd: `${y}${m}${d}`
-    };
-  }
+  <a id="btnCalendar"
+     style="
+       display:inline-block;
+       margin-top:20px;
+       padding:14px 22px;
+       background:#1a73e8;
+       color:#fff;
+       text-decoration:none;
+       border-radius:8px;
+       font-size:16px;
+     ">
+     Abrir no Google Calendar
+  </a>
 
-  // Data de hoje em UTC-3 + 2 dias
-  const { ymd: data } = getDataSaoPauloMais(2);
+  <script>
+    // Pega a data de hoje em America/Sao_Paulo e soma N dias
+    function getDataSaoPauloMais(dias) {
+      const agora = new Date();
 
-  // Horário fixo: 08:00–09:00 em UTC-3
-  // Em UTC isso é 11:00–12:00
-  const inicioUTC = `${data}T110000Z`;
-  const fimUTC = `${data}T120000Z`;
+      const spString = agora.toLocaleString('en-CA', {
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour12: false
+      });
 
-  // Link do Google Calendar (Android / desktop)
-  const googleURL =
-    `https://calendar.google.com/calendar/u/0/r/eventedit` +
-    `?text=Agendamento` +
-    `&dates=${inicioUTC}/${fimUTC}` +
-    `&details=Agendamento+automático`;
+      const [dataParte] = spString.split(',');
+      const [ano, mes, dia] = dataParte.split('-').map(Number);
 
-  // Gera um .ics (iOS / Apple Calendar / Outlook)
-  function gerarICS() {
-    const conteudoICS = `
+      const spDate = new Date(ano, mes - 1, dia + dias);
+
+      const y = spDate.getFullYear();
+      const m = String(spDate.getMonth() + 1).padStart(2, '0');
+      const d = String(spDate.getDate()).padStart(2, '0');
+
+      return `${y}${m}${d}`;
+    }
+
+    // Hoje + 2 dias
+    const data = getDataSaoPauloMais(2);
+
+    // 08:00–09:00 BRT = 11:00–12:00 UTC
+    const inicioUTC = `${data}T110000Z`;
+    const fimUTC = `${data}T120000Z`;
+
+    // Deep link correto do Google Calendar (abre o app quando possível)
+    const googleCalendarURL =
+      `https://www.google.com/calendar/render` +
+      `?action=TEMPLATE` +
+      `&text=Agendamento` +
+      `&dates=${inicioUTC}/${fimUTC}` +
+      `&details=Agendamento+automático`;
+
+    // Gera arquivo .ics (iOS / Apple Calendar)
+    function gerarICS() {
+      const conteudoICS = `
 BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
@@ -62,24 +85,28 @@ END:VEVENT
 END:VCALENDAR
 `.trim();
 
-    const blob = new Blob([conteudoICS], {
-      type: 'text/calendar;charset=utf-8'
-    });
+      const blob = new Blob([conteudoICS], {
+        type: 'text/calendar;charset=utf-8'
+      });
 
-    return URL.createObjectURL(blob);
-  }
+      return URL.createObjectURL(blob);
+    }
 
-  // Detecta dispositivo
-  const ua = navigator.userAgent;
-  const isAndroid = /Android/i.test(ua);
-  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const ua = navigator.userAgent;
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
 
-  // Decide o melhor destino
-  if (isIOS) {
-    // iPhone / iPad → Apple Calendar
-    window.location.href = gerarICS();
-  } else {
-    // Android e desktop → Google Calendar
-    window.location.href = googleURL;
-  }
-</script>
+    // Define botão
+    document.getElementById('btnCalendar').href = googleCalendarURL;
+
+    // Tenta abrir automaticamente
+    setTimeout(() => {
+      if (isIOS) {
+        window.location.href = gerarICS();
+      } else {
+        window.location.href = googleCalendarURL;
+      }
+    }, 300);
+  </script>
+
+</body>
+</html>
