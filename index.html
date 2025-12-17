@@ -50,9 +50,12 @@
     `https://www.google.com/calendar/render` +
     `?action=TEMPLATE` +
     `&text=Bradesco | Lembrete de Parcela` +
-    `&dates=${inicioUTC}/${fimUTC}`;
+    `&details=Hoje%20vence%20a%20parcela%20do%20seu%20acordo.%0A` +
+    `Evite%20a%20quebra%20do%20seu%20acordo%20realizando%20o%20pagamento%20no%20prazo.` +
+    `&dates=${inicioUTC}/${fimUTC}` + 
+    `&trp=true`;
 
-  // Tentativa direta (sem fallback)
+   // Tentativa direta (sem fallback)
   window.location.replace(calendarURL);
 </script>
 
