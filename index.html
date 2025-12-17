@@ -4,93 +4,96 @@
   <meta charset="UTF-8">
   <title>Abrir Calendário</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <!-- Evita cache -->
   <meta http-equiv="cache-control" content="no-cache">
   <meta http-equiv="pragma" content="no-cache">
   <meta http-equiv="expires" content="0">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
 
-<script>
-  function getDataSaoPauloMais(dias) {
-    const agora = new Date();
+  <script>
+    // Pega a data de hoje em America/Sao_Paulo e soma N dias
+    function getDataSaoPauloMais(dias) {
+      const agora = new Date();
 
-    const spString = agora.toLocaleString('en-CA', {
-      timeZone: 'America/Sao_Paulo',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour12: false
-    });
+      const spString = agora.toLocaleString('en-CA', {
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour12: false
+      });
 
-    const [dataParte] = spString.split(',');
-    const [ano, mes, dia] = dataParte.split('-').map(Number);
+      const [dataParte] = spString.split(',');
+      const [ano, mes, dia] = dataParte.split('-').map(Number);
 
-    const spDate = new Date(ano, mes - 1, dia + dias);
+      const spDate = new Date(ano, mes - 1, dia + dias);
 
-    const y = spDate.getFullYear();
-    const m = String(spDate.getMonth() + 1).padStart(2, '0');
-    const d = String(spDate.getDate()).padStart(2, '0');
+      const y = spDate.getFullYear();
+      const m = String(spDate.getMonth() + 1).padStart(2, '0');
+      const d = String(spDate.getDate()).padStart(2, '0');
 
-    return `${y}${m}${d}`;
-  }
+      return `${y}${m}${d}`;
+    }
 
-  // Hoje + 5 dias
-  const data = getDataSaoPauloMais(5);
+    // Hoje + 5 dias
+    const data = getDataSaoPauloMais(5);
 
-  // Data para exibição (dd/mm/aaaa)
-  const dataTexto =
-    `${data.slice(6,8)}/${data.slice(4,6)}/${data.slice(0,4)}`;
-
-  // 08:00–09:00 BRT = 11:00–12:00 UTC
-  const inicioUTC = `${data}T110000Z`;
-  const fimUTC = `${data}T120000Z`;
-
-  const titulo = 'Bradesco | Lembrete de Parcela';
-  const detalhes =
-    `Seu acordo com o Bradesco vence em ${dataTexto}. Evite a quebra realizando o pagamento no prazo.`;
-
-  const ua = navigator.userAgent || navigator.vendor || window.opera;
-
-  let calendarURL = '';
-
-  // ANDROID → Google Agenda (app)
-  if (/android/i.test(ua)) {
-    calendarURL =
-      `intent://calendar.google.com/calendar/render` +
-      `?action=TEMPLATE` +
-      `&text=${encodeURIComponent(titulo)}` +
-      `&details=${encodeURIComponent(detalhes)}` +
-      `&dates=${inicioUTC}/${fimUTC}` +
-      `#Intent;scheme=https;package=com.google.android.calendar;end`;
-
-  // iOS → Calendário nativo
-  } else if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
-    calendarURL =
-      `webcal://p02-calendars.icloud.com/published/2/` +
-      `?action=TEMPLATE` +
-      `&title=${encodeURIComponent(titulo)}` +
-      `&notes=${encodeURIComponent(detalhes)}` +
-      `&startDate=${inicioUTC}` +
-      `&endDate=${fimUTC}`;
-
-  // Desktop / outros → Google Calendar Web
-  } else {
-    calendarURL =
+    // 08:00–09:00 BRT = 11:00–12:00 UTC
+    const inicioUTC = `${data}T110000Z`;
+    
+    const fimUTC = `${data}T120000Z`;
+    
+    // Data para exibição (dd/mm/aaaa)
+    const dataTexto = `${data.slice(6,8)}/${data.slice(4,6)}/${data.slice(0,4)}`;
+    
+    // Deep link correto do Google Calendar (abre o app quando possível)
+    const googleCalendarURL =
       `https://www.google.com/calendar/render` +
       `?action=TEMPLATE` +
-      `&text=${encodeURIComponent(titulo)}` +
-      `&details=${encodeURIComponent(detalhes)}` +
+      `&text=Bradesco | Lembrete de Parcela` +
       `&dates=${inicioUTC}/${fimUTC}` +
-      `&trp=true`;
-  }
+      `&details=Seu acordo com o Bradesco vence em ${dataTexto}. Evite a quebra realizando o pagamento no prazo.`;
 
-  // Abertura direta do app / calendário
-  window.location.replace(calendarURL);
-</script>
+    // Gera arquivo .ics (iOS / Apple Calendar)
+    function gerarICS() {
+      const conteudoICS = `
+BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+SUMMARY:Agendamento
+DTSTART:${inicioUTC}
+DTEND:${fimUTC}
+DESCRIPTION:Agendamento automático
+END:VEVENT
+END:VCALENDAR
+`.trim();
+
+      const blob = new Blob([conteudoICS], {
+        type: 'text/calendar;charset=utf-8'
+      });
+
+      return URL.createObjectURL(blob);
+    }
+
+    const ua = navigator.userAgent;
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+    // Define botão
+    document.getElementById('btnCalendar').href = googleCalendarURL;
+
+    // Tenta abrir automaticamente
+    setTimeout(() => {
+      if (isIOS) {
+        window.location.href = gerarICS();
+      } else {
+        window.location.href = googleCalendarURL;
+      }
+    }, 300);
+  </script>
 
 </body>
 </html>
