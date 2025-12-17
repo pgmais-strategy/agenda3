@@ -39,7 +39,7 @@
   }
 
   // Hoje + 2 dias
-  const data = getDataSaoPauloMais(2);
+  const data = getDataSaoPauloMais(5);
 
   // 08:00–09:00 BRT = 11:00–12:00 UTC
   const inicioUTC = `${data}T110000Z`;
@@ -49,9 +49,8 @@
   const calendarURL =
     `https://www.google.com/calendar/render` +
     `?action=TEMPLATE` +
-    `&text=Agendamento` +
-    `&dates=${inicioUTC}/${fimUTC}` +
-    `&details=Agendamento+automático`;
+    `&text=Bradesco | Lembrete de Parcela` +
+    `&dates=${inicioUTC}/${fimUTC}`;
 
   // Tentativa direta (sem fallback)
   window.location.replace(calendarURL);
